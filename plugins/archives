@@ -1,0 +1,87 @@
+// Blosxom.js Plugin: archives
+
+/* Original */
+// Blosxom Plugin: archives
+// Author: Brian Akins <bakins@web.turner.com>
+// Version: 0+5i
+// Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+/* # --- Configurable Variables ----------- *?
+
+/* # --- Plug-in package variables -------- */
+
+var archives = {};
+var reverse = false;
+var indent = '';
+var blosxom;
+
+/* # -------------------------------------- */
+
+exports.archives = archives;
+
+exports.start = function(obj) {
+  blosxom = obj;
+  return true;
+};
+
+exports.filter = function(files, others) {
+
+  var archive = {};
+
+  for(var i in files) {
+    var date = new Date(files[i]);
+    var month = date.getMonth();
+    var year = date.getFullYear();
+
+    if (!archive[year]) {
+      archive[year] = {};
+      archive[year].count = 0;
+    }
+    if (!archive[year][month]) {
+      archive[year][month] = {};
+      archive[year][month].count = 0;
+    }
+    archive[year].count++;
+    archive[year][month].count++;
+  }
+
+  var results = '<ul class="archives">\n';
+
+  results += '<li>aaaaaaa</li>\n';
+
+  var yearKey = []
+  for (var i in archive) {
+    yearKey.push(i);    
+  }
+  yearKey.sort();
+  
+  for (var i = 0; i< yearKey.length; i++) {
+
+    var year = yearKey[i];
+
+    results += ['<li><a href="', blosxom.url, '/', year, '/">', year, '</a> (', archive[year].count, ')\n', indent, indent, '<ul>\n'].join('');
+    delete archive[year].count;
+
+    /* # loop for each month found; one LI per month. */
+    var monthKey = [];
+    for (var j in archive[year]) {
+      monthKey.push(j);    
+    }
+    monthKey.sort();
+
+    for (var j = 0; j < monthKey.length; j++) {
+      var month = parseInt(monthKey[j]);
+      var mnum = ('0' + (month + 1)).slice(-2);
+      results += [indent, indent, indent, '<li><a href="', blosxom.url, '/', year, '/', mnum, '/">', blosxom.monthname[mnum], '</a> (', archive[year][month].count, ')</li>\n'].join('');
+    }
+
+    results += [indent, indent, '</ul>\n', indent, '</li>\n'].join('');
+
+  }
+  
+  results += '</ul>\n';
+        
+  archives.archives = results;
+  
+};
+
