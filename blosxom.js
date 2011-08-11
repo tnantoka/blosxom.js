@@ -14,7 +14,7 @@
 */
 
 // blosxom object exports for module
-var blosxom = {}; 
+var blosxom = {};
 
 // Load modules
 var querystring = require('querystring');
@@ -37,7 +37,7 @@ if (process.env.GATEWAY_INTERFACE) {
   });
   // Main
   process.stdin.on('end', main);
-  
+
 // CGI(Static)
 } else {
   main();
@@ -47,7 +47,7 @@ if (process.env.GATEWAY_INTERFACE) {
 function main() {
 
 // for test
-// log('');  
+// log('');
 
 try {
 
@@ -68,7 +68,7 @@ var datadir = __dirname + '/data';
 /* # What's my preferred base URL for this blog (leave blank for automatic)? */
 var $url = '';
 
-/* 
+/*
 # Should I stick only to the datadir for items or travel down the
 # directory hierarchy looking for items?  If so, to what depth?
 # 0 = infinite depth (aka grab everything), 1 = datadir only, n = n levels down
@@ -106,16 +106,13 @@ var static_password = 'pass';
 /* # What flavours should I generate statically? */
 var static_flavours = ['html', 'rss'];
 
-/* 
+/*
 # Should I statically generate individual entries?
 # 0 = no, 1 = yes
 */
 var static_entries = 0;
 
 /* # -------------------------------- */
-$css = {};
-$css.path = '/blosxom/style-sites.css';
-
 
 'use strict';
 
@@ -128,6 +125,10 @@ var num2month = { '00': 'nil', '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr
 $url = $url || 'http://' + process.env.HTTP_HOST + process.env.SCRIPT_NAME;
 $url = $url.replace(/^included:/, 'http:'); /* # Fix for Server Side Includes (SSI) */
 $url = $url.replace(/\/$/, '');
+
+$css = {};
+$css.path = require('path').dirname(process.env.SCRIPT_NAME) + '/style-sites.css';
+
 
 /* # Drop ending any / from dir settings */
 datadir = datadir.replace(/\/$/, '');
@@ -151,11 +152,11 @@ if (!process.env.GATEWAY_INTERFACE) {
 //  QUERY.path = '/2011/05/15/';
 }
 
-/* 
+/*
 # Path Info Magic
 # Take a gander at HTTP's PATH_INFO for optional blog name, archive yr/mo/day
 */
-var paths = (process.env.PATH_INFO || QUERY.path || '').split('/'); 
+var paths = (process.env.PATH_INFO || QUERY.path || '').split('/');
 paths.shift();
 
 while (paths[0] && /^[a-zA-Z].*$/.test(paths[0]) && !/(.*)\.(.*)/.test(paths[0])) {
@@ -169,7 +170,7 @@ if (paths[paths.length - 1] && paths[paths.length - 1].match(/(.+)\.(.+)$/)) {
   $flavour = RegExp.$2;
   if (RegExp.$1 != 'index') {
     path_info += '/' + RegExp.$1 + '.' + RegExp.$2;
-  } 
+  }
   paths.pop();
 } else {
   $flavour = QUERY.flav || default_flavour;
@@ -190,7 +191,7 @@ var template = function(path, chunk, flavour) {
     try {
       var filename = join(datadir, path, chunk + '.' + flavour);
       if (fs.statSync(filename).isFile()) {
-        return fs.readFileSync(filename, 'UTF-8');    
+        return fs.readFileSync(filename, 'UTF-8');
       }
     } catch (e) {
     }
@@ -213,7 +214,7 @@ for (var i = 0; i < DATA.length; i++) {
   var matches = DATA[i].match(/^(\S+)\s(\S+)\s([\s\S]*)$/);
   var ct = matches[1];
   var comp = matches[2];
-  var txt = matches[3];  
+  var txt = matches[3];
   if (templates[ct]) {
     templates[ct][comp] = txt;
   } else {
@@ -264,26 +265,26 @@ load_template = template;
 
 /* # Define default find subroutine */
 var entries = function() {
-  
+
   var files = {};
   var indexes = {};
   var others = {};
- 
+
   var d;
- 
+
   find(function(err, path, stat) {
-    
+
     if (err) {
       throw err;
     }
-    
+
     if (depth && dirname(path).match(/\//g).length > depth) {
       return;
-    } 
-    
-    /* 
+    }
+
+    /*
     # a match
-    # not an index, .file, and is readable 
+    # not an index, .file, and is readable
     */
     // TODO: check readable
     var matches = path.match(new RegExp(['^', datadir, '/(?:(.*)/)?(.+)\\.', file_extension, '$'].join('')));
@@ -292,7 +293,7 @@ var entries = function() {
       if (show_future_entries || new Date(stat.mtime) < new Date()) {
         files[path] = stat.mtime;
       }
-    
+
       /* # static rendering bits */
       // TODO: static
       var static_stat;
@@ -300,15 +301,15 @@ var entries = function() {
         static_stat = fs.statSync(static_dir + '/' + matches[1] + '/index.' + static_flavours[0]);
         if (QUERY['-all'] || static_stat.isFile() || static_stat.mtime < stat.mtime) {
           indexes[matches[1]] = 1;
-         
+
           var nice = nice_date(stat.ctime);
           d = [nice[5], nice[2], nice[3]].join('/');
-      
+
           indexes[d] = d;
           if (static_entries) {
             $indexes[(matches[1] ? matches[1] + '/' : '') + matches[2] + '.' + file_extension] = 1;
           }
-        }    
+        }
       } catch (e) {
       }
     } else {
@@ -319,7 +320,7 @@ var entries = function() {
   function find(fn, path) {
     try {
       var stat = fs.statSync(path);
-    
+
       if (stat.isDirectory()) {
         var files = fs.readdirSync(path);
         for(var i = 0; i < files.length; i++) {
@@ -332,11 +333,11 @@ var entries = function() {
       fn(e);
     }
   }
-  
+
   return {
     files: files,
     indexes: indexes,
-    others: others 
+    others: others
   };
 };
 
@@ -381,7 +382,7 @@ if (!process.env.GATEWAY_INTERFACE && process.argv[2] && static_password && proc
 
 /* # Dynamic */
 } else {
-  
+
   var content_type = template(path_info, 'content_type', $flavour);
   content_type = content_type.replace(/\n[\S\S]*/, '');
   console.log(generate('dynamic', path_info, [$path_info_yr, path_info_mo_num, $path_info_da].join('/'), $flavour, content_type));
@@ -399,22 +400,22 @@ for (var i = 0; i < plugins_array.length; i++) {
 
 /* # Generate */
 function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
- 
+
   var f = files;
-  
+
   /*
   # Plugins: Skip
   # Allow plugins to decide if we can cut short story generation
   */
   var skip;
-  
+
   for (var i = 0; i < plugins_array.length; i++) {
     if (plugins_hash[plugins_array[i]] > 0 && modules[plugins_array[i]].skip) {
       skip = modules[plugins_array[i]].skip;
       break;
     }
   }
-  
+
   var interpolate = function(tpl) {
     tpl = tpl.replace(/(\$\w+(?:::)?\w*)/g, function(str, p1) {
       p1 = p1.replace(/::/g, '.');
@@ -431,17 +432,17 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
             } catch (e) {
             }
           }
-        }        
+        }
       }
     });
     return tpl;
   };
-  
+
   if (typeof skip == 'undefined' || !skip) {
-    
+
     /*
     # Plugins: Interpolate
-    # Allow for the first encountered plugin::interpolate subroutine to 
+    # Allow for the first encountered plugin::interpolate subroutine to
     # override the default built-in interpolate subroutine
     */
     for (var i = 0; i < plugins_array.length; i++) {
@@ -450,7 +451,7 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
         break;
       }
     }
-    
+
     /* # Head */
     var head = template(currentdir, 'head', flavour);
 
@@ -464,7 +465,7 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
     }
 
     head = interpolate(head);
-    
+
     var output = head;
 
     /* # Stories */
@@ -476,12 +477,12 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
       currentdir = matches[1] + matches[2] + '.' + file_extension;
       if(files[datadir + '/' + matches[1] + matches[2] + '.' + file_extension]) {
         f = {};
-        f[datadir + '/' + matches[1] + matches[2] + '.' + file_extension] = files[datadir + '/' + matches[1] + matches[2] + '.' + file_extension]; 
+        f[datadir + '/' + matches[1] + matches[2] + '.' + file_extension] = files[datadir + '/' + matches[1] + matches[2] + '.' + file_extension];
       }
-    } else { 
+    } else {
       currentdir = currentdir.replace(/index\..+$/, '');
-    }    
-    
+    }
+
     /* # Define a default sort subroutine */
     var sort = function(files) {
       var a = [];
@@ -517,8 +518,8 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
     for (var i = 0; i < path_files.length; i++) {
       if (ne <= 0 && !/\d/.test(date)) {
         break;
-      } 
-      
+      }
+
       path_files[i].match(new RegExp(['^', datadir, '\\/(?:(.*)\\/)?(.*)\\.', file_extension].join('')));
       var $path = RegExp.$1;
       var $fn = RegExp.$2;
@@ -533,14 +534,14 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
 
       /* # Date fiddling for by-{year,month,day} archive views */
       var nice = nice_date(files[path_files[i]]);
-      var $dw = nice[0], 
-        $mo = nice[1], 
-        $mo_num = nice[2], 
-        $da = nice[3], 
-        $ti = nice[4], 
+      var $dw = nice[0],
+        $mo = nice[1],
+        $mo_num = nice[2],
+        $da = nice[3],
+        $ti = nice[4],
         $yr = nice[5];
       var hr = $ti.split(':')[0];
-      var min = $ti.split(':')[1]; 
+      var min = $ti.split(':')[1];
       var hr12, ampm;
       if (hr >= 12) {
         hr12 = hr - 12;
@@ -563,10 +564,10 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
       }
       if (path_info_mo_num && $mo != num2month[path_info_mo_num]) {
         continue;
-      } 
+      }
       if (path_info_da && $da != path_info_da) {
         continue;
-      } 
+      }
       if (path_info_da && $da < path_info_da) {
         break;
       }
@@ -590,7 +591,7 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
       }
 
       var $title, $body, raw;
-      var stat = fs.statSync(path_files[i]); 
+      var stat = fs.statSync(path_files[i]);
       if (stat.isFile()) {
         var file = fs.readFileSync(path_files[i], 'UTF-8');
         file = file.replace(/\n$/, '');
@@ -616,15 +617,15 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
       }
 
       story = interpolate(story);
-    
+
       output += story;
-  
+
       ne--;
     }
 
     /* # Foot */
     var foot = template(currentdir, 'foot', flavour);
-  
+
     /* # Plugins: Foot */
     for (var i = 0; i < plugins_array.length; i++) {
       if (plugins_hash[plugins_array[i]] > 0 && modules[plugins_array[i]].foot) {
@@ -650,7 +651,7 @@ function generate(static_or_dynamic, currentdir, date, flavour, $content_type) {
   if (static_or_dynamic == 'dynamic') {
     output = 'Content-Type: ' + content_type + '\n\n' + output;
   }
-  
+
   return output;
 }
 
@@ -686,7 +687,7 @@ function nice_date(unixtime) {
 
   var c_time;
   try {
-    c_time = new Date(fs.statSync(unixtime).ctime).toString();    
+    c_time = new Date(fs.statSync(unixtime).ctime).toString();
   } catch (e) {
     try {
     c_time = new Date(unixtime).toString();
@@ -701,10 +702,10 @@ function nice_date(unixtime) {
     da = matches[3],
     ti = matches[5],
     yr = matches[4];
-    
+
   da = ('0' + da).slice(-2);
   var mo_num = month2num[mo];
-  
+
   return [dw, mo, mo_num, da, ti, yr];
 }
 
@@ -753,6 +754,6 @@ function log() {
   console.log('*******************************************************', '<br />');
   console.log.apply(null, arguments);
   console.log('<br />');
-  
+
   }
 }
